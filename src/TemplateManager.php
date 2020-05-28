@@ -57,6 +57,8 @@ class TemplateManager
     }
 
     /**
+     * Replace placeholders in texts by destination and site related information.
+     *
      * @param $text
      * @param $quote
      * @param $destination
@@ -98,6 +100,8 @@ class TemplateManager
     }
 
     /**
+     * Replace placeholders in texts by user related information.
+     *
      * @param $text
      * @param $user
      * @return string|string[]|null
