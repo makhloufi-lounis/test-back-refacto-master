@@ -15,11 +15,37 @@ require_once __DIR__ . '/../src/TemplateManager.php';
 
 class TemplateManagerTest extends PHPUnit_Framework_TestCase
 {
+
+    /**
+     * @var Quote
+     */
+    private $quote;
+    /**
+     * @var Destination
+     */
+    private $expectedDestination;
+
+    /**
+     * @var User
+     */
+    private $expectedUser;
+
+    /**
+     * @var TemplateManager
+     */
+    private $templateManager;
+
     /**
      * Init the mocks
      */
     public function setUp()
     {
+        $faker = \Faker\Factory::create();
+        $destinationId = $faker->randomNumber();
+        $this->quote = new Quote($faker->randomNumber(), $faker->randomNumber(), $destinationId, $faker->date());
+        $this->expectedDestination = DestinationRepository::getInstance()->getById($destinationId);
+        $this->expectedUser = ApplicationContext::getInstance()->getCurrentUser();
+        $this->templateManager = new TemplateManager();
     }
 
     /**
@@ -27,6 +53,10 @@ class TemplateManagerTest extends PHPUnit_Framework_TestCase
      */
     public function tearDown()
     {
+        unset($this->quote);
+        unset($this->expectedDestination);
+        unset($this->expectedUser);
+        unset($this->templateManager);
     }
 
     /**
@@ -34,14 +64,6 @@ class TemplateManagerTest extends PHPUnit_Framework_TestCase
      */
     public function test()
     {
-        $faker = \Faker\Factory::create();
-
-        $destinationId                  = $faker->randomNumber();
-        $expectedDestination = DestinationRepository::getInstance()->getById($destinationId);
-        $expectedUser        = ApplicationContext::getInstance()->getCurrentUser();
-
-        $quote = new Quote($faker->randomNumber(), $faker->randomNumber(), $destinationId, $faker->date());
-
         $template = new Template(
             1,
             'Votre livraison à [quote:destination_name]',
@@ -54,20 +76,20 @@ Bien cordialement,
 
 L'équipe Convelio.com
 ");
-        $templateManager = new TemplateManager();
 
-        $message = $templateManager->getTemplateComputed(
+
+        $message = $this->templateManager->getTemplateComputed(
             $template,
             [
-                'quote' => $quote
+                'quote' => $this->quote
             ]
         );
 
-        $this->assertEquals('Votre livraison à ' . $expectedDestination->getCountryName(), $message->getSubject());
+        $this->assertEquals('Votre livraison à ' . $this->expectedDestination->getCountryName(), $message->getSubject());
         $this->assertEquals("
-Bonjour " . $expectedUser->getFirstName() . ",
+Bonjour " . $this->expectedUser->getFirstName() . ",
 
-Merci de nous avoir contacté pour votre livraison à " . $expectedDestination->getCountryName() . ".
+Merci de nous avoir contacté pour votre livraison à " . $this->expectedDestination->getCountryName() . ".
 
 Bien cordialement,
 
